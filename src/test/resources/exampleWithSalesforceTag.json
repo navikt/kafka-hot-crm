@@ -1,0 +1,354 @@
+{
+  "tags": [
+    "SALESFORCE"
+  ],
+  "hentPerson": {
+    "adressebeskyttelse": [],
+    "bostedsadresse": [
+      {
+        "angittFlyttedato": "1972-03-07",
+        "gyldigFraOgMed": "1972-03-07T00:00:00",
+        "gyldigTilOgMed": null,
+        "coAdressenavn": null,
+        "vegadresse": {
+          "matrikkelId": 541156058,
+          "husnummer": "7",
+          "husbokstav": "A",
+          "bruksenhetsnummer": null,
+          "adressenavn": "Anders Hovdens veg",
+          "kommunenummer": "5001",
+          "tilleggsnavn": null,
+          "postnummer": "7024",
+          "bydelsnummer": "500101",
+          "koordinater": {
+            "x": 566613.65,
+            "y": 7030342.7,
+            "z": null
+          }
+        },
+        "matrikkeladresse": null,
+        "ukjentBosted": null,
+        "utenlandskAdresse": null,
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:34.105",
+          "gyldighetstidspunkt": "1972-03-07T00:00:00",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "d80a4ba5-bf8c-490e-aaca-bdeb1dac89c8",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:34.105",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "deltBosted": [],
+    "doedsfall": [],
+    "doedfoedtBarn": [],
+    "falskIdentitet": null,
+    "foedselsdato": [
+      {
+        "foedselsaar": 1972,
+        "foedselsdato": "1972-03-07",
+        "metadata": {
+          "opplysningsId": "dcf8f038-01c4-4d5d-b2ba-787e6bdf05ed",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:32.752",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        },
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:32.752",
+          "gyldighetstidspunkt": "2022-01-14T15:41:32.752",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        }
+      }
+    ],
+    "foedested": [
+      {
+        "foedeland": "SGP",
+        "foedested": "Fødested i/på SINGAPORE",
+        "foedekommune": null,
+        "metadata": {
+          "opplysningsId": "dcf8f038-01c4-4d5d-b2ba-787e6bdf05ed",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:32.752",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        },
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:32.752",
+          "gyldighetstidspunkt": "2022-01-14T15:41:32.752",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        }
+      }
+    ],
+    "folkeregisteridentifikator": [
+      {
+        "identifikasjonsnummer": "07037211162",
+        "type": "FNR",
+        "status": "I_BRUK",
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:32.275",
+          "gyldighetstidspunkt": "2022-01-14T15:41:32.275",
+          "opphoerstidspunkt": null,
+          "kilde": "srvdolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "484d39c3-d043-4627-80ef-ff1c0b3663de",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:32.416",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "srvdolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "folkeregisterpersonstatus": [
+      {
+        "status": "bosatt",
+        "forenkletStatus": "bosattEtterFolkeregisterloven",
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:34.873",
+          "gyldighetstidspunkt": "2022-01-14T15:41:34.873",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "2f52f58b-630c-424d-b192-952fb133f62e",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:34.873",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "forelderBarnRelasjon": [],
+    "foreldreansvar": [],
+    "fullmakt": [],
+    "identitetsgrunnlag": [],
+    "kontaktadresse": [],
+    "kontaktinformasjonForDoedsbo": [],
+    "kjoenn": [
+      {
+        "kjoenn": "MANN",
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:33.624",
+          "gyldighetstidspunkt": "2022-01-14T15:41:33.624",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "c097e74d-ba39-4aea-a175-7377ee197639",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:33.624",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "navn": [
+      {
+        "fornavn": "SMIDIG",
+        "mellomnavn": null,
+        "etternavn": "BÆREPOSE",
+        "forkortetNavn": "BÆREPOSE SMIDIG",
+        "originaltNavn": null,
+        "gyldigFraOgMed": "2022-01-14",
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:33.143",
+          "gyldighetstidspunkt": "2022-01-14T15:41:33.143",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "c010b05b-8cb8-411c-b16b-c9651dc7463e",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:33.143",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "opphold": [],
+    "oppholdsadresse": [],
+    "sikkerhetstiltak": [],
+    "sivilstand": [
+      {
+        "type": "UGIFT",
+        "gyldigFraOgMed": null,
+        "relatertVedSivilstand": null,
+        "bekreftelsesdato": null,
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:35.637",
+          "gyldighetstidspunkt": "2022-01-14T15:41:35.637",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "4ace6212-719a-4931-b0d1-7d8a4ed6c665",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:35.637",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "statsborgerskap": [
+      {
+        "land": "NOR",
+        "bekreftelsesdato": null,
+        "gyldigFraOgMed": "1972-03-07",
+        "gyldigTilOgMed": null,
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:35.247",
+          "gyldighetstidspunkt": "1972-03-07T00:00:00",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "48abe1fb-1d9e-48f3-bb91-a1f80894ea61",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:35.247",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "tilrettelagtKommunikasjon": [],
+    "utenlandskIdentifikasjonsnummer": [],
+    "telefonnummer": [],
+    "innflyttingTilNorge": [
+      {
+        "fraflyttingsland": "SGP",
+        "fraflyttingsstedIUtlandet": null,
+        "folkeregistermetadata": {
+          "ajourholdstidspunkt": "2022-01-14T15:41:34.489",
+          "gyldighetstidspunkt": "1972-03-07T00:00:00",
+          "opphoerstidspunkt": null,
+          "kilde": "Dolly",
+          "aarsak": null,
+          "sekvens": null
+        },
+        "metadata": {
+          "opplysningsId": "6dc07898-fe33-47fc-a3ae-bbe6485cc6ba",
+          "master": "FREG",
+          "endringer": [
+            {
+              "type": "OPPRETT",
+              "registrert": "2022-01-14T15:41:34.489",
+              "registrertAv": "Folkeregisteret",
+              "systemkilde": "FREG",
+              "kilde": "Dolly"
+            }
+          ],
+          "historisk": false
+        }
+      }
+    ],
+    "utflyttingFraNorge": [],
+    "vergemaalEllerFremtidsfullmakt": []
+  },
+  "hentIdenter": {
+    "identer": [
+      {
+        "ident": "07037211162",
+        "historisk": false,
+        "gruppe": "FOLKEREGISTERIDENT",
+        "metadata": null,
+        "folkeregistermetadata": null
+      },
+      {
+        "ident": "2388995573463",
+        "historisk": false,
+        "gruppe": "AKTORID",
+        "metadata": null,
+        "folkeregistermetadata": null
+      }
+    ]
+  }
+}

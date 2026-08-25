@@ -1,0 +1,65 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
+// Define a task to update the options in the YAML file
+tasks.register('updateDispatchWorkflow') {
+    doLast {
+        def workflowFile = file('.github/workflows/on-dispatch.yml')
+        def naisDir = file('./.nais')
+
+        // Read the YAML file content
+        def lines = Files.readAllLines(Paths.get(workflowFile.absolutePath))
+
+        // Define the pattern to check the file structure
+        def pattern = """name: Dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      DEPLOY_APP:
+        description: 'Deployment Application'
+        required: true
+        type: choice
+        default: 'sf-plis'
+        options:"""
+
+        // Check if the file starts with the desired structure
+        def isValid = lines.take(11).join('\n').trim() == pattern.trim()
+        def refPattern = pattern.trim()
+        def ref = lines.take(11).join('\n').trim()
+        def refTest = refPattern == ref
+        if (isValid) {
+            // Find the index of the "options:" line
+            def optionsIndex = lines.indexOf('        options:')
+            def deployClusterIndex = lines.findIndexOf { it.trim().startsWith('DEPLOY_CLUSTER:') }
+
+            if (optionsIndex != -1 && deployClusterIndex != -1) {
+                // Get the number of existing options
+                def existingOptionsCount = deployClusterIndex - optionsIndex - 1
+
+                // Find all folders in ./.nais/ except 'default'
+                def options = naisDir.listFiles()
+                        .findAll { it.isDirectory() && it.name != 'default' }
+                        .collect { "          - '${it.name}'" } // add correct indentation
+                        .sort()
+
+                // Add 'ALL' as an option
+                options.add("          - 'ALL'")
+
+                // Prepare the new content for the file
+                def newContent = lines.take(optionsIndex + 1) + options + lines.drop(deployClusterIndex)
+
+                // Write the updated content back to the file
+                Files.write(Paths.get(workflowFile.absolutePath), newContent)
+
+                println "Updated ${workflowFile} with new options."
+            } else {
+                println "Could not find the options or DEPLOY_CLUSTER section. No changes made."
+            }
+        } else {
+            println "The file does not match the expected structure. No changes made."
+            println lines.take(11).join('\n').trim()
+            println pattern.trim()
+        }
+    }
+}

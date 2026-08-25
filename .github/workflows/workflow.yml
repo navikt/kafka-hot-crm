@@ -1,0 +1,133 @@
+name: Build, push, and deploy
+
+on:
+  workflow_call:
+    inputs:
+      DEPLOY_APP:
+        required: true
+        type: string
+      DEPLOY_CLUSTER:
+        required: true
+        type: string
+      FLAG_SEEK:
+        required: true
+        type: boolean
+      SEEK_OFFSET:
+        required: true
+        type: string
+      NUMBER_OF_SAMPLES:
+        required: true
+        type: string
+      FLAG_NO_POST:
+        required: true
+        type: boolean
+      FLAG_ALT_ID:
+        required: true
+        type: boolean
+jobs:
+  test:
+    name: >- # Displays inputs as name on job
+      Tests ${{ inputs.DEPLOY_APP }} - ${{ inputs.DEPLOY_CLUSTER }}
+      ${{ inputs.FLAG_SEEK && format(' - SEEK {0}', inputs.SEEK_OFFSET) || '' }}
+      ${{ inputs.NUMBER_OF_SAMPLES != '0' && format(' - SAMPLE {0}', inputs.NUMBER_OF_SAMPLES) || '' }}
+      ${{ inputs.FLAG_NO_POST && ' - NO_POST' || '' }}
+      ${{ inputs.FLAG_ALT_ID && ' - ALT_ID' || '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout v5.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup java v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - name: Build and run tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew test
+  build:
+    name: Build and push Docker container
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    outputs:
+      image: ${{ steps.docker-push.outputs.image }}
+    steps:
+      - name: Checkout v5.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Setup java v5.0.0
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: 21
+          distribution: 'temurin'
+      - name: Setup Gradle v5.0.0
+        uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+        with:
+          cache-disabled: true
+          dependency-graph: generate-and-submit
+      - name: Build JAR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew clean build shadowJar -x test
+      - name: Nais Docker Build Push
+        uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # v0
+        id: docker-push
+        with:
+          team: platforce
+      - name: Create image URL artifact
+        run: echo "${{ steps.docker-push.outputs.image }}" > ./imageUrl.txt
+      - name: Upload image URL artifact with upload-artifact v5.0.0
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: imageUrl
+          path: ./imageUrl.txt
+  setup-matrix:
+    name: Set up matrix for deployment
+    needs: test
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout v5.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up matrix
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.DEPLOY_APP }}" == "ALL" ]; then
+            apps=$(find ./.nais -name "${{ inputs.DEPLOY_CLUSTER }}.yaml" -not -path "*/default/*" -exec dirname {} \; | xargs -n 1 basename)
+            matrix_config=$(printf '%s\n' "$apps" | jq -R -s -c 'split("\n")[:-1] | map({app: .})')
+          else
+            matrix_config=$(printf '%s\n' "${{ inputs.DEPLOY_APP }}" | jq -R -s -c 'split("\n")[:-1] | map({app: .})')
+          fi
+          echo "Matrix config ${matrix_config}"
+          echo "matrix=$matrix_config" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+  deploy:
+    name: Deploy ${{ matrix.target.app }} to ${{ inputs.DEPLOY_CLUSTER }}
+    needs: [ build, setup-matrix ]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout v5.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Merge YAML
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew mergeYamlTask
+      - name: Deploy ${{ matrix.target.app }} to ${{ inputs.DEPLOY_CLUSTER }}
+        uses: nais/deploy/actions/deploy@fa754451577294aae42872a69b888b3470478ec1 # v2
+        env:
+          CLUSTER: ${{ inputs.DEPLOY_CLUSTER }}
+          RESOURCE: .nais/${{ matrix.target.app }}/target/${{ inputs.DEPLOY_CLUSTER }}.yaml
+          VAR: image=${{ needs.build.outputs.image }},DEPLOY_APP=${{ matrix.target.app }},DEPLOY_CLUSTER=${{ inputs.DEPLOY_CLUSTER }},NUMBER_OF_SAMPLES=${{ inputs.NUMBER_OF_SAMPLES }},FLAG_SEEK=${{ inputs.FLAG_SEEK }},SEEK_OFFSET=${{ inputs.SEEK_OFFSET }},FLAG_NO_POST=${{ inputs.FLAG_NO_POST }},FLAG_ALT_ID=${{ inputs.FLAG_ALT_ID }}

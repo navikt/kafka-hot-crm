@@ -1,0 +1,105 @@
+name: Dispatch
+
+on:
+  workflow_dispatch:
+    inputs:
+      DEPLOY_APP:
+        description: 'Deployment Application'
+        required: true
+        type: choice
+        default: 'sf-plis'
+        options:
+          - 'sf-plis'
+          - 'ALL'
+      DEPLOY_CLUSTER:
+        description: 'Deployment Cluster'
+        required: true
+        type: choice
+        default: 'dev-gcp'
+        options:
+          - 'dev-gcp'
+          - 'prod-gcp'
+      FLAG_SEEK:
+        description: "Seek"
+        required: true
+        type: boolean
+      SEEK_OFFSET:
+        description: "Seek offset"
+        required: true
+        default: 0
+      NUMBER_OF_SAMPLES:
+        description: "Number of samples"
+        required: true
+        default: 0
+      FLAG_NO_POST:
+        description: "No post"
+        required: true
+        type: boolean
+      FLAG_ALT_ID:
+        description: "Alt Id"
+        required: true
+        type: boolean
+run-name: >- # Used as run-name on dispatch:
+  Dispatch:
+  ${{ inputs.DEPLOY_APP }} - ${{ inputs.DEPLOY_CLUSTER }}
+  ${{ inputs.FLAG_SEEK && format(' - SEEK {0}', inputs.SEEK_OFFSET) || '' }}
+  ${{ inputs.NUMBER_OF_SAMPLES != '0' && format(' - SAMPLE {0}', inputs.NUMBER_OF_SAMPLES) || '' }}
+  ${{ inputs.FLAG_NO_POST && ' - NO_POST' || '' }}
+  ${{ inputs.FLAG_ALT_ID && ' - ALT_ID' || '' }}
+jobs:
+  setup-matrix:
+    name: Set up matrix for deployment
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up matrix
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.DEPLOY_APP }}" == "ALL" ]; then
+            apps=$(find ./.nais -name "${{ inputs.DEPLOY_CLUSTER }}.yaml" -not -path "*/default/*" -exec dirname {} \; | xargs -n 1 basename)
+            matrix_config=$(printf '%s\n' "$apps" | jq -R -s -c 'split("\n")[:-1] | map({app: .})')
+          else
+            matrix_config=$(printf '%s\n' "${{ inputs.DEPLOY_APP }}" | jq -R -s -c 'split("\n")[:-1] | map({app: .})')
+          fi
+          echo "Matrix config ${matrix_config}"
+          echo "matrix=$matrix_config" >> $GITHUB_OUTPUT
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+  deploy:
+    needs: setup-matrix
+    name: Deploy ${{ matrix.target.app }} to ${{ github.event.inputs.DEPLOY_CLUSTER }} (Dispatched)
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      actions: read
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.setup-matrix.outputs.matrix) }}
+    steps:
+      - name: Fetch latest image url from artifact
+        id: read-image-url
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARCHIVE_DOWNLOAD_URL=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/repos/navikt/kafka-platforce/actions/artifacts?name=imageUrl" | jq -r '.artifacts[0].archive_download_url')
+          echo "ARCHIVE_DOWNLOAD_URL: $ARCHIVE_DOWNLOAD_URL"
+          curl -s -H "Authorization: token $GITHUB_TOKEN" -o artifact.zip -L "$ARCHIVE_DOWNLOAD_URL"
+          IMAGE_URL=$(unzip -p artifact.zip)
+          echo "IMAGE_URL: $IMAGE_URL"
+          echo "image_url=$IMAGE_URL" >> $GITHUB_OUTPUT
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Merge YAML
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew mergeYamlTask
+      - name: Deploy ${{ matrix.target.app }} to ${{ github.event.inputs.DEPLOY_CLUSTER }}
+        uses: nais/deploy/actions/deploy@fa754451577294aae42872a69b888b3470478ec1 # v2
+        env:
+          CLUSTER: ${{ github.event.inputs.DEPLOY_CLUSTER }}
+          RESOURCE: .nais/${{ matrix.target.app }}/target/${{ github.event.inputs.DEPLOY_CLUSTER }}.yaml
+          VAR: image=${{ steps.read-image-url.outputs.image_url }},DEPLOY_APP=${{ matrix.target.app }},DEPLOY_CLUSTER=${{ inputs.DEPLOY_CLUSTER }},NUMBER_OF_SAMPLES=${{ inputs.NUMBER_OF_SAMPLES }},FLAG_SEEK=${{ inputs.FLAG_SEEK }},SEEK_OFFSET=${{ inputs.SEEK_OFFSET }},FLAG_NO_POST=${{ inputs.FLAG_NO_POST }},FLAG_ALT_ID=${{ inputs.FLAG_ALT_ID }}

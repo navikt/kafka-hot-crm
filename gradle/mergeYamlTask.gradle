@@ -1,0 +1,145 @@
+import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
+import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.Constructor
+import org.yaml.snakeyaml.representer.Representer
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.yaml:snakeyaml:2.0'
+    }
+}
+ext {
+    mergeYaml = { Map base, Map overrides ->
+        overrides.each { key, value ->
+            if (base.containsKey(key)) {
+                if (base[key] instanceof Map && value instanceof Map) {
+                    mergeYaml(base[key], value)
+                } else if (base[key] instanceof List && value instanceof List) {
+                    base[key] = mergeLists(base[key], value, key)
+                } else {
+                    base[key] = value
+                }
+            } else {
+                base[key] = value
+            }
+        }
+        return base
+    }
+
+    mergeLists = { List baseList, List overrideList, String key ->
+        def result = baseList.collect { item ->
+            item instanceof Map ? new LinkedHashMap(item) : item
+        }
+
+        if (key == 'env') {
+            // Merge env vars by name
+            overrideList.each { overrideItem ->
+                def matchIndex = result.findIndexOf { baseItem ->
+                    baseItem instanceof Map &&
+                            overrideItem instanceof Map &&
+                            baseItem['name'] != null &&
+                            baseItem['name'] == overrideItem['name']
+                }
+
+                if (matchIndex >= 0) {
+                    result[matchIndex] = overrideItem
+                } else {
+                    result.add(overrideItem)
+                }
+            }
+        } else {
+            // For envFrom and other lists: keep all unique elements
+            overrideList.each { overrideItem ->
+                def exists = result.any { baseItem -> baseItem == overrideItem }
+                if (!exists) {
+                    result.add(overrideItem)
+                }
+            }
+        }
+
+        return result
+    }
+
+    copyYaml = { String app, String env ->
+        def targetDir = file("./.nais/${app}/target")
+        targetDir.mkdirs()
+
+        def sourceFile = file("./.nais/${app}/${env}.yaml")
+        def destinationFile = file("./.nais/${app}/target/${env}.yaml")
+
+        if (sourceFile.exists()) {
+            copy { from sourceFile into targetDir }
+            println "File copied successfully to ${destinationFile}"
+        } else {
+            println "Source file does not exist: ${sourceFile}"
+        }
+    }
+}
+
+tasks.register('mergeYamlTask') {
+    doLast {
+        def environments = ['dev-gcp', 'prod-gcp']
+
+        environments.each {env ->
+            def defaultFile = file("./.nais/default/${env}.yaml")
+
+            if (!defaultFile.exists()) {
+                println "Default YAML file for ${env} does not exist."
+                return
+            } else {
+                // println "using file ./.nais/default/${env}.yaml"
+            }
+
+            // Load YAML files
+            LoaderOptions loaderOptions = new LoaderOptions()
+            DumperOptions dumperOptions = new DumperOptions()
+
+            // Set options to keep the original YAML layout
+            dumperOptions.defaultFlowStyle = DumperOptions.FlowStyle.BLOCK
+            dumperOptions.indent = 2
+            dumperOptions.prettyFlow = true
+            dumperOptions.defaultScalarStyle = DumperOptions.ScalarStyle.PLAIN
+
+            Representer representer = new Representer(dumperOptions)
+            Constructor constructor = new Constructor(loaderOptions)
+            Yaml yaml = new Yaml(constructor, representer, dumperOptions, loaderOptions)
+
+            // Map defaultData = yaml.load(defaultFile.text)
+
+            // Iterate over all directories in ./.nais excluding the default directory
+            file('./.nais').eachDir { appDir ->
+                if (appDir.name != 'default') {
+                    def specificFile = new File(appDir, "${env}.yaml")
+                    if (specificFile.exists()) {
+                        Map defaultData = yaml.load(defaultFile.text)
+
+                        // println "merging with ${appDir} ${env}.yaml"
+                        Map specificData = yaml.load(specificFile.text)
+
+                        // Merge specificData into defaultData
+                        Map mergedData = mergeYaml(defaultData, specificData)
+
+                        // Ensure the target directory exists
+                        def targetDir = new File(appDir, 'target')
+                        if (!targetDir.exists()) {
+                            targetDir.mkdirs()
+                        }
+
+                        // Write the merged data to target/dev-fss.yaml
+                        def mergedFile = new File(targetDir, "${env}.yaml")
+                        String mergedContent = yaml.dump(mergedData)
+                        mergedFile.write(mergedContent)
+
+                        println "Merged content for ${env} written to ${mergedFile}"
+                    } else {
+                        // println "Specific YAML file for ${env} does not exist in ${appDir}"
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+{
+  "hentPerson": {
+    "adressebeskyttelse": "ALL",
+    "bostedsadresse": "ALL",
+    "doedsfall": "ALL",
+    "foedested": "ALL",
+    "foedselsdato" : "ALL",
+    "folkeregisteridentifikator": "ALL",
+    "folkeregisterpersonstatus": "ALL",
+    "forelderBarnRelasjon": "ALL",
+    "fullmakt": "ALL",
+    "kjoenn": "ALL",
+    "navn": "ALL",
+    "oppholdsadresse": "ALL",
+    "sikkerhetstiltak": "ALL",
+    "sivilstand": "ALL",
+    "statsborgerskap": "ALL",
+    "tilrettelagtKommunikasjon": "ALL",
+    "telefonnummer": "ALL",
+    "innflyttingTilNorge": "ALL",
+    "utflyttingFraNorge": "ALL",
+    "vergemaalEllerFremtidsfullmakt": "ALL"
+  },
+  "hentIdenter": {
+    "identer": "ALL"
+  }
+}
