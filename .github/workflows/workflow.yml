@@ -78,7 +78,7 @@ jobs:
         uses: nais/docker-build-push@45d352fb62fb52ccb5ff6cba22c047fa02b35321 # v0
         id: docker-push
         with:
-          team: platforce
+          team: hot-crm
       - name: Create image URL artifact
         run: echo "${{ steps.docker-push.outputs.image }}" > ./imageUrl.txt
       - name: Upload image URL artifact with upload-artifact v5.0.0
