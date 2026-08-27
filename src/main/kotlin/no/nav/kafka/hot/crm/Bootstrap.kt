@@ -7,6 +7,7 @@ val application =
         env(config_DEPLOY_APP)
     ) {
         "sf-plis" -> KafkaPosterApplication()
+        "sf-payment-claim" -> KafkaPosterApplication()
         else -> throw RuntimeException("Attempted to deploy unknown app")
     }
 
