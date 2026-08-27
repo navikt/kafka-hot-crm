@@ -9,6 +9,7 @@ on:
         type: choice
         default: 'sf-plis'
         options:
+          - 'sf-payment-claim'
           - 'sf-plis'
           - 'ALL'
       DEPLOY_CLUSTER:
