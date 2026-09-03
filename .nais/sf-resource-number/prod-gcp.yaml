@@ -3,4 +3,4 @@ spec:
     - secret: kafka-hot-crm
   env:
     - name: KAFKA_TOPIC
-      value: digihot.topic-name
+      value: hot-crm.resource-number

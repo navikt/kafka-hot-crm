@@ -6,8 +6,8 @@ val application =
     when (
         env(config_DEPLOY_APP)
     ) {
-        "sf-plis" -> KafkaPosterApplication()
-        "sf-payment-claim" -> KafkaPosterApplication()
+        "sf-payment-status" -> KafkaPosterApplication()
+        "sf-resource-number" -> KafkaPosterApplication()
         else -> throw RuntimeException("Attempted to deploy unknown app")
     }
 

@@ -7,10 +7,10 @@ on:
         description: 'Deployment Application'
         required: true
         type: choice
-        default: 'sf-plis'
+        default: 'sf-payment-status'
         options:
-          - 'sf-payment-claim'
-          - 'sf-plis'
+          - 'sf-resource-number'
+          - 'sf-payment-status'
           - 'ALL'
       DEPLOY_CLUSTER:
         description: 'Deployment Cluster'

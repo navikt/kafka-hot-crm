@@ -3,4 +3,4 @@ spec:
     - secret: kafka-hot-crm
   env:
     - name: KAFKA_TOPIC
-      value: hot-crm.payment-claim
+      value: hot-crm.payment-status
