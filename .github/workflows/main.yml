@@ -13,7 +13,7 @@ jobs:
       contents: write
     secrets: inherit
     with:
-      DEPLOY_APP: ALL # use ALL to deploy all apps in cluster
+      DEPLOY_APP: sf-payment-status # use ALL to deploy all apps in cluster
       DEPLOY_CLUSTER: dev-gcp
 
       # Start consuming from a particular offset
