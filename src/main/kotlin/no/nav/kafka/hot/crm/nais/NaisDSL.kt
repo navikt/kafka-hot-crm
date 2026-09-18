@@ -39,6 +39,7 @@ fun naisAPI(): HttpHandler =
                 Response(Status.INTERNAL_SERVER_ERROR)
             }
         },
+        "/internal/tryOutSFRest" bind Method.GET to tryOutSFRestHandler,
         "/internal/gui" bind Method.GET to Gui.guiHandler,
         "/internal/investigate" bind Method.GET to Investigate.investigateHandler,
         "/internal/clearDb" bind Method.GET to clearDbHandler,
@@ -114,4 +115,8 @@ private val testAccessHandlerMigration: HttpHandler = {
     val migrationTokenHandler =
         MigratingAccessTokenHandler(old = DefaultAccessTokenHandler(), new = NewAccessTokenHandler())
     Response(OK).body("$currentTimeStamp\nTest access (migration) result: " + migrationTokenHandler.testAccess())
+}
+
+private val tryOutSFRestHandler: HttpHandler = {
+    Response(OK).body("Try out SF Rest endpoint")
 }

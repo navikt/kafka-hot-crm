@@ -1,4 +1,6 @@
 spec:
+  ingresses:
+     - "https://sf-payment-status.intern.dev.nav.no"
   envFrom:
     - secret: kafka-hot-crm
   env:
