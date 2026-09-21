@@ -6,10 +6,10 @@ import no.nav.kafka.hot.crm.env
 import no.nav.kafka.hot.crm.gui.Gui
 import no.nav.kafka.hot.crm.investigate.Investigate
 import no.nav.kafka.hot.crm.metrics.Prometheus
-import no.nav.kafka.hot.crm.test.Test
 import no.nav.kafka.hot.crm.salesforce.DefaultAccessTokenHandler
 import no.nav.kafka.hot.crm.salesforce.NewAccessTokenHandler
 import no.nav.kafka.hot.crm.secret_SF_VALIDATION_CLIENT_ID
+import no.nav.kafka.hot.crm.test.Test
 import no.nav.sf.pubsub.token.MigratingAccessTokenHandler
 import org.http4k.core.HttpHandler
 import org.http4k.core.Method
