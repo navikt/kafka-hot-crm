@@ -6,6 +6,7 @@ import no.nav.kafka.hot.crm.env
 import no.nav.kafka.hot.crm.gui.Gui
 import no.nav.kafka.hot.crm.investigate.Investigate
 import no.nav.kafka.hot.crm.metrics.Prometheus
+import no.nav.kafka.hot.crm.test.Test
 import no.nav.kafka.hot.crm.salesforce.DefaultAccessTokenHandler
 import no.nav.kafka.hot.crm.salesforce.NewAccessTokenHandler
 import no.nav.kafka.hot.crm.secret_SF_VALIDATION_CLIENT_ID
@@ -39,7 +40,7 @@ fun naisAPI(): HttpHandler =
                 Response(Status.INTERNAL_SERVER_ERROR)
             }
         },
-        "/internal/tryOutSFRest" bind Method.GET to tryOutSFRestHandler,
+        "/internal/tryOutSFRest" bind Method.POST to Test.tryOutSFRestHandler,
         "/internal/gui" bind Method.GET to Gui.guiHandler,
         "/internal/investigate" bind Method.GET to Investigate.investigateHandler,
         "/internal/clearDb" bind Method.GET to clearDbHandler,
@@ -115,8 +116,4 @@ private val testAccessHandlerMigration: HttpHandler = {
     val migrationTokenHandler =
         MigratingAccessTokenHandler(old = DefaultAccessTokenHandler(), new = NewAccessTokenHandler())
     Response(OK).body("$currentTimeStamp\nTest access (migration) result: " + migrationTokenHandler.testAccess())
-}
-
-private val tryOutSFRestHandler: HttpHandler = {
-    Response(OK).body("Try out SF Rest endpoint")
 }
