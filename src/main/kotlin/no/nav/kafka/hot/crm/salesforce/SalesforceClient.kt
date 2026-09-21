@@ -1,10 +1,6 @@
 package no.nav.kafka.hot.crm.salesforce
 
 import com.google.gson.Gson
-import mu.KotlinLogging
-import no.nav.kafka.hot.crm.config_DEPLOY_APP
-import no.nav.kafka.hot.crm.devContext
-import no.nav.kafka.hot.crm.env
 import org.http4k.client.OkHttp
 import org.http4k.core.Headers
 import org.http4k.core.HttpHandler
@@ -16,8 +12,6 @@ import java.io.File
 const val SALESFORCE_VERSION = "v57.0"
 
 const val HOT_CLAIM_EXTERNAL_ID_FIELD = "External_Id__c"
-
-private val log = KotlinLogging.logger { }
 
 private val gson = Gson()
 
@@ -39,13 +33,7 @@ class SalesforceClient(
 
         val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/composite/sobjects"
 
-        val headers: Headers =
-            listOf(
-                "Authorization" to "Bearer ${accessTokenHandler.accessToken}",
-                "Content-Type" to "application/json;charset=UTF-8",
-            )
-
-        val request = Request(Method.POST, dstUrl).headers(headers).body(requestBody)
+        val request = Request(Method.POST, dstUrl).headers(defaultHeaders()).body(requestBody)
 
         File("/tmp/files/latestPostRequest").writeText(request.toMessage())
 
@@ -69,16 +57,29 @@ class SalesforceClient(
             "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/HOT_Claim__c/" +
                 "$HOT_CLAIM_EXTERNAL_ID_FIELD/$externalId"
 
-        val headers: Headers =
-            listOf(
-                "Authorization" to "Bearer ${accessTokenHandler.accessToken}",
-                "Content-Type" to "application/json;charset=UTF-8",
-            )
-
         val requestBody = gson.toJson(mapOf(fieldName to value))
-
-        val request = Request(Method.PATCH, dstUrl).headers(headers).body(requestBody)
+        val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(requestBody)
 
         return httpClient(request)
     }
+
+    /**
+     * Returns Salesforce object metadata from the describe endpoint.
+     */
+    fun describeSObject(sObjectType: String = "HOT_Claim__c"): Response {
+        val objectName = sObjectType.trim()
+        require(objectName.isNotEmpty()) { "sObjectType must not be blank" }
+
+        val dstUrl =
+            "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/$objectName/describe"
+
+        val request = Request(Method.GET, dstUrl).headers(defaultHeaders())
+        return httpClient(request)
+    }
+
+    private fun defaultHeaders(): Headers =
+        listOf(
+            "Authorization" to "Bearer ${accessTokenHandler.accessToken}",
+            "Content-Type" to "application/json;charset=UTF-8",
+        )
 }
