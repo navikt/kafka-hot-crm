@@ -7,6 +7,7 @@ import org.http4k.core.HttpHandler
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status
 import java.io.File
 
 const val SALESFORCE_VERSION = "v57.0"
@@ -75,6 +76,30 @@ class SalesforceClient(
 
         val request = Request(Method.GET, dstUrl).headers(defaultHeaders())
         return httpClient(request)
+    }
+
+    /**
+     * Returns metadata for all sObjects available to the authenticated user.
+     */
+    fun describeGlobal(): Response {
+        val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects"
+        val request = Request(Method.GET, dstUrl).headers(defaultHeaders())
+        return httpClient(request)
+    }
+
+    /**
+     * Returns the runtime Salesforce auth context used by this app.
+     */
+    fun context(): Response {
+        val payload =
+            gson.toJson(
+                mapOf(
+                    "instanceUrl" to accessTokenHandler.instanceUrl,
+                    "tenantId" to accessTokenHandler.tenantId,
+                    "apiVersion" to SALESFORCE_VERSION,
+                ),
+            )
+        return Response(Status.OK).body(payload)
     }
 
     private fun defaultHeaders(): Headers =

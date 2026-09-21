@@ -33,6 +33,8 @@ object Test {
                 when (action) {
                     "describe" ->
                         sfClient.describeSObject(body.sObjectType ?: "HOT_Claim__c")
+                    "describeGlobal" -> sfClient.describeGlobal()
+                    "context" -> sfClient.context()
                     "update" ->
                         if (body.topic.isNullOrBlank() || body.externalId.isNullOrBlank()) {
                             Response(Status.BAD_REQUEST)
@@ -46,7 +48,7 @@ object Test {
                         }
                     else ->
                         Response(Status.BAD_REQUEST)
-                            .body("Unsupported action '$action'. Supported actions: update, describe")
+                            .body("Unsupported action '$action'. Supported actions: update, describe, describeGlobal, context")
                 }
 
             Response(response.status).body(response.bodyString())
