@@ -136,11 +136,13 @@ class KafkaToSFPoster(
                     val externalId = record.key()
                     val value = modifier?.invoke(record) ?: record.value()
 
-                    if (!sfClient.updateField(
-                        topic,
-                        externalId,
-                        value,
-                    ).isSuccess()) {
+                    if (!sfClient
+                            .updateField(
+                                topic,
+                                externalId,
+                                value,
+                            ).isSuccess()
+                    ) {
                         log.warn { "Failed when posting to SF - $stats" }
                         WorkSessionStatistics.failedSalesforceCallCounter.inc()
                         return ConsumeResult.FAIL
@@ -151,22 +153,21 @@ class KafkaToSFPoster(
                 if (successfullyPostedRecords.count() > 0) {
                     stats.updatePostedStatistics(successfullyPostedRecords)
                 }
-                
+
                 return ConsumeResult.SUCCESSFULLY_CONSUMED_BATCH
-                
             }
         }
 
     // For testdata:
     private var whatWouldBeSentBatch = 1
-    
-    /* 
+
+    /*
     private fun updateWhatWouldBeSent(recordsFiltered: Iterable<ConsumerRecord<String, String?>>) {
         File(
             "/tmp/whatwouldbesent",
         ).appendText("BATCH ${whatWouldBeSentBatch++}\n${recordsFiltered.toKafkaMessagesSet().joinToString("\n")}\n\n")
     }
-    */
+     */
 
     private fun filterRecords(records: ConsumerRecords<String, String?>): Iterable<ConsumerRecord<String, String?>> {
         val recordsPostFilter = filter?.run { records.filter { invoke(it) } } ?: records

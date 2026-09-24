@@ -29,7 +29,7 @@ class SalesforceClient(
     private val httpClient: HttpHandler = OkHttp(),
     private val accessTokenHandler: AccessTokenHandler = NewAccessTokenHandler(),
 ) {
-    /* 
+    /*
     fun postRecords(kafkaMessages: Set<KafkaMessage>): Response {
         val requestBody = SFsObjectRest(records = kafkaMessages).toJson()
 
@@ -41,7 +41,7 @@ class SalesforceClient(
 
         return httpClient(request)
     }
-    */
+     */
 
     /**
      * Updates a single field on a HOT_Claim__c record, identified by its External_Id__c,

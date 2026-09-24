@@ -21,14 +21,13 @@ private val gson = Gson()
  * The general sObject REST API for posting records of different types
  * In this case, post of KafkaMessage containing attribute refering to Salesforce custom object KafkaMessage__c
  */
- 
+
 data class SFsObjectRest(
     val allOrNone: Boolean = true,
     val records: Set<KafkaMessage>,
 ) {
     fun toJson(): String = gson.toJson(this)
 }
-
 
 data class KafkaMessage(
     val attributes: SFsObjectRestAttributes = SFsObjectRestAttributes(),
@@ -57,7 +56,6 @@ fun Response.isSuccess(): Boolean =
     when (status) {
         Status.OK ->
             try {
-                
                 val parsedResult: SFsObjectStatus = Gson().fromJson(bodyString(), SFsObjectStatus::class.java)
                 // Salesforce gives 200 OK independent of successful posting of records or not, need to check response value
                 if (parsedResult == null) {
