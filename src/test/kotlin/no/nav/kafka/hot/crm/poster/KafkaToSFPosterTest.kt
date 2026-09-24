@@ -8,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.kafka.hot.crm.kafka.KafkaConsumerFactory
 import no.nav.kafka.hot.crm.readResourceFile
-import no.nav.kafka.hot.crm.salesforce.KafkaMessage
 import no.nav.kafka.hot.crm.salesforce.SFsObjectStatus
 import no.nav.kafka.hot.crm.salesforce.SalesforceClient
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.Duration
-import java.util.Base64
 
 class KafkaToSFPosterTest {
     private val exampleWithSalesforceTagRecord = readResourceFile("/exampleWithSalesforceTag.json").asRecordValue()
@@ -67,7 +65,7 @@ class KafkaToSFPosterTest {
         every { partitionInfoMock.partition() } returns 0
         every { kafkaConsumerMock.assign(any()) } returns Unit
 
-        every { sfClientMock.postRecords(any()) } returns Response(Status.OK).body("[${gson.toJson(SFsObjectStatus("id", true))}]")
+        every { sfClientMock.updateField(any(), any(), any()) } returns Response(Status.OK).body(gson.toJson(SFsObjectStatus("id", true)))
         every { kafkaConsumerMock.commitSync() } returns Unit
         every { kafkaConsumerMock.close() } returns Unit
 
@@ -93,7 +91,7 @@ class KafkaToSFPosterTest {
     }
 
     @Test
-    fun `Two polls - when consumer pulls one record on two subsequent poll calls and none on a third call that work session should result in two post calls to salesforce`() {
+    fun `Two polls - when consumer pulls one record on two subsequent poll calls and none on a third call that work session should result in two update calls to salesforce`() {
         // Setup mock responses to poll:
         val pollResponse1 = listOf(exampleWithSalesforceTagRecord).toConsumerRecords() // Result of first poll call - one record
         val pollResponse2 = listOf(exampleWithSalesforceTagWithOffset1Record).toConsumerRecords() // Result of second poll call - one record
@@ -104,21 +102,17 @@ class KafkaToSFPosterTest {
         kafkaToSFPoster.runWorkSession()
 
         verify(exactly = 2) {
-            sfClientMock.postRecords(
-                setOf(
-                    KafkaMessage(
-                        CRM_Topic__c = "topic",
-                        CRM_Key__c = "key",
-                        CRM_Value__c = Base64.getEncoder().encodeToString(readResourceFile("/exampleWithSalesforceTag.json").toByteArray()),
-                    ),
-                ),
+            sfClientMock.updateField(
+                "topic",
+                "key",
+                readResourceFile("/exampleWithSalesforceTag.json"),
             )
         }
         verify { kafkaConsumerMock.commitSync() }
     }
 
     @Test
-    fun `Duplicate removed - when consumer pulls two records with same key and value on the same poll call that work session should result in one post call to salesforce without the duplicate`() {
+    fun `Duplicates preserved - when consumer pulls two records with same key and value on the same poll call that work session should result in two update calls to salesforce`() {
         val pollResponse1 = listOf(exampleWithSalesforceTagRecord, exampleWithSalesforceTagWithOffset1Record).toConsumerRecords() // 2 records, one duplicate except offset
         val pollResponse2 = ConsumerRecords<String, String?>(mapOf())
 
@@ -126,15 +120,11 @@ class KafkaToSFPosterTest {
 
         kafkaToSFPoster.runWorkSession()
 
-        verify(exactly = 1) {
-            sfClientMock.postRecords(
-                setOf(
-                    KafkaMessage(
-                        CRM_Topic__c = "topic",
-                        CRM_Key__c = "key",
-                        CRM_Value__c = Base64.getEncoder().encodeToString(readResourceFile("/exampleWithSalesforceTag.json").toByteArray()),
-                    ),
-                ),
+        verify(exactly = 2) {
+            sfClientMock.updateField(
+                "topic",
+                "key",
+                readResourceFile("/exampleWithSalesforceTag.json"),
             )
         }
         verify { kafkaConsumerMock.commitSync() }
@@ -165,12 +155,12 @@ class KafkaToSFPosterTest {
 
         kafkaToSFPoster.runWorkSession()
 
-        verify(exactly = 0) { sfClientMock.postRecords(any()) }
+        verify(exactly = 0) { sfClientMock.updateField(any(), any(), any()) }
         verify { kafkaConsumerMock.commitSync() }
     }
 
     @Test
-    fun `Filter - Like Two polls test case with a filter that lets everything through should result in the same postRecord calls`() {
+    fun `Filter - Like Two polls test case with a filter that lets everything through should result in the same update calls`() {
         filter = filterMock
         setUp()
 
@@ -188,21 +178,17 @@ class KafkaToSFPosterTest {
 
         verify(exactly = 2) { filterMock(any()) }
         verify(exactly = 2) {
-            sfClientMock.postRecords(
-                setOf(
-                    KafkaMessage(
-                        CRM_Topic__c = "topic",
-                        CRM_Key__c = "key",
-                        CRM_Value__c = Base64.getEncoder().encodeToString(readResourceFile("/exampleWithSalesforceTag.json").toByteArray()),
-                    ),
-                ),
+            sfClientMock.updateField(
+                "topic",
+                "key",
+                readResourceFile("/exampleWithSalesforceTag.json"),
             )
         }
         verify { kafkaConsumerMock.commitSync() }
     }
 
     @Test
-    fun `Filter - Like Two polls test case with a filter that lets nothing through should result in no postRecord calls`() {
+    fun `Filter - Like Two polls test case with a filter that lets nothing through should result in no update calls`() {
         filter = filterMock
         setUp()
 
@@ -219,22 +205,12 @@ class KafkaToSFPosterTest {
         kafkaToSFPoster.runWorkSession()
 
         verify(exactly = 2) { filterMock(any()) }
-        verify(exactly = 0) {
-            sfClientMock.postRecords(
-                setOf(
-                    KafkaMessage(
-                        CRM_Topic__c = "topic",
-                        CRM_Key__c = "key",
-                        CRM_Value__c = Base64.getEncoder().encodeToString(readResourceFile("/exampleWithSalesforceTag.json").toByteArray()),
-                    ),
-                ),
-            )
-        }
+        verify(exactly = 0) { sfClientMock.updateField(any(), any(), any()) }
         verify(exactly = 2) { kafkaConsumerMock.commitSync() }
     }
 
     @Test
-    fun `Modifier - Like Two polls test case with a modifier - should result in the same postRecord calls with the modification applied to record values`() {
+    fun `Modifier - Like Two polls test case with a modifier - should result in the same update calls with the modification applied to record values`() {
         modifier = { it.value().toString() + "-modification" }
         Assertions.assertEquals("value-modification", modifier!!("value".asRecordValue()))
         setUp()
@@ -252,20 +228,10 @@ class KafkaToSFPosterTest {
         kafkaToSFPoster.runWorkSession()
 
         verify(exactly = 2) {
-            sfClientMock.postRecords(
-                setOf(
-                    KafkaMessage(
-                        CRM_Topic__c = "topic",
-                        CRM_Key__c = "key",
-                        CRM_Value__c =
-                            Base64.getEncoder().encodeToString(
-                                (
-                                    readResourceFile("/exampleWithSalesforceTag.json") +
-                                        "-modification"
-                                ).toByteArray(),
-                            ),
-                    ),
-                ),
+            sfClientMock.updateField(
+                "topic",
+                "key",
+                readResourceFile("/exampleWithSalesforceTag.json") + "-modification",
             )
         }
         verify { kafkaConsumerMock.commitSync() }

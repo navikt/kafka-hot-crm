@@ -60,8 +60,11 @@ class KafkaToSFPoster(
 
         hasRunOnce = true
 
-        pollAndConsume(kafkaConsumer)
-        kafkaConsumer.close()
+        try {
+            pollAndConsume(kafkaConsumer)
+        } finally {
+            kafkaConsumer.close()
+        }
     }
 
     private fun setupKafkaConsumer(kafkaTopic: String): KafkaConsumer<String, String?> =
@@ -117,7 +120,6 @@ class KafkaToSFPoster(
             }
 
             val recordsFiltered = filterRecords(recordsFromTopic)
-
             if (samplesLeft > 0) sampleRecords(recordsFiltered)
 
             if (recordsFiltered.count() == 0 || flagNoPost) {
@@ -128,25 +130,43 @@ class KafkaToSFPoster(
                 // consider it a successfully consumed batch without further action
                 ConsumeResult.SUCCESSFULLY_CONSUMED_BATCH
             } else {
-                if (sfClient.postRecords(recordsFiltered.toKafkaMessagesSet()).isSuccess()) {
-                    stats.updatePostedStatistics(recordsFiltered)
-                    ConsumeResult.SUCCESSFULLY_CONSUMED_BATCH
-                } else {
-                    log.warn { "Failed when posting to SF - $stats" }
-                    WorkSessionStatistics.failedSalesforceCallCounter.inc()
-                    ConsumeResult.FAIL
+                val successfullyPostedRecords = mutableListOf<ConsumerRecord<String, String?>>()
+                for (record in recordsFiltered) {
+                    val topic = record.topic()
+                    val externalId = record.key()
+                    val value = modifier?.invoke(record) ?: record.value()
+
+                    if (!sfClient.updateField(
+                        topic,
+                        externalId,
+                        value,
+                    ).isSuccess()) {
+                        log.warn { "Failed when posting to SF - $stats" }
+                        WorkSessionStatistics.failedSalesforceCallCounter.inc()
+                        return ConsumeResult.FAIL
+                    } else {
+                        successfullyPostedRecords.add(record)
+                    }
                 }
+                if (successfullyPostedRecords.count() > 0) {
+                    stats.updatePostedStatistics(successfullyPostedRecords)
+                }
+                
+                return ConsumeResult.SUCCESSFULLY_CONSUMED_BATCH
+                
             }
         }
 
     // For testdata:
     private var whatWouldBeSentBatch = 1
-
+    
+    /* 
     private fun updateWhatWouldBeSent(recordsFiltered: Iterable<ConsumerRecord<String, String?>>) {
         File(
             "/tmp/whatwouldbesent",
         ).appendText("BATCH ${whatWouldBeSentBatch++}\n${recordsFiltered.toKafkaMessagesSet().joinToString("\n")}\n\n")
     }
+    */
 
     private fun filterRecords(records: ConsumerRecords<String, String?>): Iterable<ConsumerRecord<String, String?>> {
         val recordsPostFilter = filter?.run { records.filter { invoke(it) } } ?: records
@@ -154,7 +174,7 @@ class KafkaToSFPoster(
         return recordsPostFilter
     }
 
-    private fun Iterable<ConsumerRecord<String, String?>>.toKafkaMessagesSet(): Set<KafkaMessage> {
+    /* private fun Iterable<ConsumerRecord<String, String?>>.toKafkaMessagesSet(): Set<KafkaMessage> {
         val kafkaMessages =
             this.map {
                 KafkaMessage(
@@ -170,7 +190,7 @@ class KafkaToSFPoster(
             if (metricsActive) log.warn { "Detected ${kafkaMessages.size - uniqueValueCount} duplicates in $kafkaTopic batch" }
         }
         return uniqueKafkaMessages
-    }
+    } */
 
     private fun sampleRecords(records: Iterable<ConsumerRecord<String, String?>>) {
         records.forEach {

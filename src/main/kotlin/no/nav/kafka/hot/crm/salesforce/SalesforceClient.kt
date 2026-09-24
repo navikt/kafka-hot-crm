@@ -10,7 +10,7 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import java.io.File
 
-const val SALESFORCE_VERSION = "v57.0"
+const val SALESFORCE_VERSION = "v61.0"
 
 const val HOT_CLAIM_EXTERNAL_ID_FIELD = "External_Id__c"
 
@@ -29,6 +29,7 @@ class SalesforceClient(
     private val httpClient: HttpHandler = OkHttp(),
     private val accessTokenHandler: AccessTokenHandler = NewAccessTokenHandler(),
 ) {
+    /* 
     fun postRecords(kafkaMessages: Set<KafkaMessage>): Response {
         val requestBody = SFsObjectRest(records = kafkaMessages).toJson()
 
@@ -40,6 +41,7 @@ class SalesforceClient(
 
         return httpClient(request)
     }
+    */
 
     /**
      * Updates a single field on a HOT_Claim__c record, identified by its External_Id__c,
@@ -56,7 +58,7 @@ class SalesforceClient(
 
         val dstUrl =
             "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/HOT_Claim__c/" +
-                "$HOT_CLAIM_EXTERNAL_ID_FIELD/$externalId"
+                "$HOT_CLAIM_EXTERNAL_ID_FIELD/$externalId?updateOnly=true"
 
         val requestBody = gson.toJson(mapOf(fieldName to value))
         val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(requestBody)
