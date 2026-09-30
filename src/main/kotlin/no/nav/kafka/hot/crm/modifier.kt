@@ -230,3 +230,15 @@ fun filterHistoricalEntries(array: JsonArray): JsonArray {
 
     return updatedArray
 }
+
+/**
+ * extractStatusField
+ * Extracts the "status" field from a kafka message value, e.g. {"status":"OK"} -> "OK".
+ * Used for the payment-status topic.
+ */
+fun extractStatusField(record: ConsumerRecord<String, String?>): String? {
+    if (record.value() == null) return null // Tombstone - no reduction to be made
+    val messageObject = JsonParser.parseString(record.value()) as JsonObject
+    val status = messageObject["status"]
+    return if (status == null || status is JsonNull) null else status.asString
+}
