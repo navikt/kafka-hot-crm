@@ -1,4 +1,4 @@
-# kafka-hot-crm
+# kafka-hot-crm [<img align="right" src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="18" alt="GitHub repository" />](https://github.com/navikt/kafka-hot-crm)
 
 App for å importere relevante data fra Kafka til Salesforce.
 Én app-instans per Kafka-kø.
