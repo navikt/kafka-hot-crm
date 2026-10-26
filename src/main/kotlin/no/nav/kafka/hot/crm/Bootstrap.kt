@@ -7,7 +7,7 @@ val application =
         env(config_DEPLOY_APP)
     ) {
         "sf-payment-status" -> KafkaPosterApplication(modifier = ::extractStatusField)
-        "sf-resource-number" -> KafkaPosterApplication(modifier = ::extractResourceNumber)
+        "sf-resource-number" -> KafkaPosterApplication(modifier = ::extractPersonalAndResourceNumber)
         else -> throw RuntimeException("Attempted to deploy unknown app")
     }
 

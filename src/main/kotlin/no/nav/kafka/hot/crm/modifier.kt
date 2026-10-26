@@ -243,9 +243,18 @@ fun extractStatusField(record: ConsumerRecord<String, String?>): String? {
     return if (status == null || status is JsonNull) null else status.asString
 }
 
-fun extractResourceNumber(record: ConsumerRecord<String, String?>): String? {
-    if (record.value() == null) return null
-    val messageObject = JsonParser.parseString(record.value()) as JsonObject
-    val resourceNumber = messageObject["ressursnummer"]
-    return if (resourceNumber == null || resourceNumber is JsonNull) null else resourceNumber.asString
+fun extractPersonalAndResourceNumber(record: ConsumerRecord<String, String?>): String? {
+    val value = record.value() ?: return null
+    val json = JsonParser.parseString(value).asJsonObject
+
+    val resourceNumber = json.stringOrNull("ressursnummer") ?: return null
+    val personIdent = json.stringOrNull("personnummer") ?: return null
+
+    return JsonObject()
+        .apply {
+            addProperty("personIdent", personIdent)
+            addProperty("resourceNumber", resourceNumber)
+        }.toString()
 }
+
+private fun JsonObject.stringOrNull(field: String): String? = get(field)?.takeIf { !it.isJsonNull }?.asString

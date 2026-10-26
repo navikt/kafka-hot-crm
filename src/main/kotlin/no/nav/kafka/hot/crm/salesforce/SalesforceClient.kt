@@ -62,7 +62,7 @@ class SalesforceClient(
                 ?: throw IllegalArgumentException("No HOT_Claim__c field mapping for topic $topic")
         return when (topic.substringAfterLast('.')) {
             "payment-status" -> updatePaymentStatus(externalId, field, value)
-            "resource-number" -> updateResourceNumber(externalId, field, value)
+            "resource-number" -> updateResourceNumber(field, value)
             else -> throw IllegalArgumentException("No HOT_Claim__c field mapping for topic $topic")
         }
     }
@@ -83,15 +83,18 @@ class SalesforceClient(
     }
 
     private fun updateResourceNumber(
-        externalId: String,
         fieldName: String,
-        value: String?,
+        payload: String?,
     ): Response {
-        val personId = findPersonRecordId(externalId)
-        if (personId == null) throw IllegalArgumentException("Person not found for $externalId")
+        val json = JsonParser.parseString(payload).asJsonObject
+        val personIdent = json["personIdent"].asString
+        val resourceNumber = json["resourceNumber"].asString
+
+        val personId = findPersonRecordId(personIdent)
+        if (personId == null) throw IllegalArgumentException("Person not found for resource number update")
 
         val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/Person__c/$personId"
-        val body = gson.toJson(mapOf(fieldName to value))
+        val body = gson.toJson(mapOf(fieldName to resourceNumber))
 
         val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(body)
         return httpClient(request)
