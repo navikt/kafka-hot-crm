@@ -2,6 +2,7 @@ package no.nav.kafka.hot.crm.salesforce
 
 import com.google.gson.Gson
 import com.google.gson.JsonParser
+import mu.KotlinLogging
 import org.http4k.client.OkHttp
 import org.http4k.core.Headers
 import org.http4k.core.HttpHandler
@@ -34,6 +35,7 @@ class SalesforceClient(
     private val httpClient: HttpHandler = OkHttp(),
     private val accessTokenHandler: AccessTokenHandler = NewAccessTokenHandler(),
 ) {
+    private val log = KotlinLogging.logger { }
     /*
     fun postRecords(kafkaMessages: Set<KafkaMessage>): Response {
         val requestBody = SFsObjectRest(records = kafkaMessages).toJson()
