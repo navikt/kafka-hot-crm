@@ -100,7 +100,13 @@ class SalesforceClient(
     private fun findPersonRecordId(externalId: String): String? {
         val accountDetails: Response = getAccountDetails(externalId)
 
-        if (!accountDetails.status.successful) throw IllegalArgumentException("Failed to get account details")
+        if (!accountDetails.status.successful) {
+            val statusCode = accountDetails.status.code
+            val reason = Status.fromCode(statusCode)?.description ?: "Unknown Status"
+            throw IllegalStateException(
+                "Failed to get account details: HTTP $statusCode $reason; ${salesforceErrorCodes(accountDetails)}",
+            )
+        }
 
         return JsonParser
             .parseString(accountDetails.bodyString())
@@ -108,6 +114,30 @@ class SalesforceClient(
             .get("CRM_Person__c")
             ?.takeUnless { it.isJsonNull }
             ?.asString
+    }
+
+    private fun salesforceErrorCodes(response: Response): String {
+        // Only allow bounded codes into public exception logs, never response text or parser exceptions.
+        val codes =
+            runCatching {
+                val body = response.bodyString()
+                require(body.length <= 16_384)
+                JsonParser
+                    .parseString(body)
+                    .asJsonArray
+                    .map { error ->
+                        val code = error.asJsonObject.getAsJsonPrimitive("errorCode")
+                        require(code != null && code.isString)
+                        code.asString.also { require(it.matches(Regex("[A-Z_][A-Z_0-9]{0,63}"))) }
+                    }.distinct()
+                    .take(5)
+            }.getOrNull()
+
+        return if (codes.isNullOrEmpty()) {
+            "no readable Salesforce error code"
+        } else {
+            "Salesforce errorCode(s): ${codes.joinToString(", ")}"
+        }
     }
 
     private fun getAccountDetails(externalId: String): Response {
