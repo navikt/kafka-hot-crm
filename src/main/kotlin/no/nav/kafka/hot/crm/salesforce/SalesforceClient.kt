@@ -90,7 +90,7 @@ class SalesforceClient(
         val personIdent = json["personIdent"].asString
         val resourceNumber = json["resourceNumber"].asString
 
-        console.log("Updating resource number for $personIdent with $resourceNumber")
+        log.info("Updating resource number for $personIdent with $resourceNumber")
 
         val personId = findPersonRecordId(personIdent)
         if (personId == null) throw IllegalArgumentException("Person not found for resource number update")
