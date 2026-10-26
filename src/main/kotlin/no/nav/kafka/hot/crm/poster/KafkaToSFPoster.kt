@@ -134,7 +134,7 @@ class KafkaToSFPoster(
                 for (record in recordsFiltered) {
                     val topic = record.topic()
                     val externalId = record.key()
-                    val value = modifier?.invoke(record) ?: record.value()
+                    val value = if (modifier != null) modifier(record) else record.value()
 
                     if (!sfClient
                             .updateField(

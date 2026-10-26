@@ -248,7 +248,7 @@ fun extractPersonalAndResourceNumber(record: ConsumerRecord<String, String?>): S
     val json = JsonParser.parseString(value).asJsonObject
 
     val resourceNumber = json.stringOrNull("ressursnummer") ?: return null
-    val personIdent = json.stringOrNull("personnummer") ?: return null
+    val personIdent = json.stringOrNull("foedselsnummer") ?: return null
 
     return JsonObject()
         .apply {
