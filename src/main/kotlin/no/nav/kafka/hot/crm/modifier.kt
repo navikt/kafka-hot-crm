@@ -242,3 +242,10 @@ fun extractStatusField(record: ConsumerRecord<String, String?>): String? {
     val status = messageObject["status"]
     return if (status == null || status is JsonNull) null else status.asString
 }
+
+fun extractResourceNumber(record: ConsumerRecord<String, String?>): String? {
+    if (record.value() == null) return null
+    val messageObject = JsonParser.parseString(record.value()) as JsonObject
+    val resourceNumber = messageObject["ressursnummer"]
+    return if (resourceNumber == null || resourceNumber is JsonNull) null else resourceNumber.asString
+}

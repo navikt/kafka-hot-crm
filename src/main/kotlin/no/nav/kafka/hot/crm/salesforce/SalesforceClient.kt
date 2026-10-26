@@ -1,6 +1,7 @@
 package no.nav.kafka.hot.crm.salesforce
 
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import org.http4k.client.OkHttp
 import org.http4k.core.Headers
 import org.http4k.core.HttpHandler
@@ -12,7 +13,11 @@ import java.io.File
 
 const val SALESFORCE_VERSION = "v61.0"
 
-const val HOT_CLAIM_EXTERNAL_ID_FIELD = "External_Id__c"
+val externalIdField: Map<String, String> =
+    mapOf(
+        "payment-status" to "External_Id__c",
+        "resource-number" to "INT_PersonIdent__c",
+    )
 
 private val gson = Gson()
 
@@ -22,7 +27,7 @@ private val gson = Gson()
 val topicToClaimField: Map<String, String> =
     mapOf(
         "payment-status" to "PaymentStatus__c",
-        "resource-number" to "ResourceNumber__c",
+        "resource-number" to "HOT_ResourceNumber__c",
     )
 
 class SalesforceClient(
@@ -52,16 +57,63 @@ class SalesforceClient(
         externalId: String,
         value: String?,
     ): Response {
-        val fieldName =
+        val field =
             topicToClaimField[topic.substringAfterLast('.')]
                 ?: throw IllegalArgumentException("No HOT_Claim__c field mapping for topic $topic")
+        return when (topic.substringAfterLast('.')) {
+            "payment-status" -> updatePaymentStatus(externalId, field, value)
+            "resource-number" -> updateResourceNumber(externalId, field, value)
+            else -> throw IllegalArgumentException("No HOT_Claim__c field mapping for topic $topic")
+        }
+    }
 
+    private fun updatePaymentStatus(
+        externalId: String,
+        fieldName: String,
+        value: String?,
+    ): Response {
         val dstUrl =
             "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/HOT_Claim__c/" +
-                "$HOT_CLAIM_EXTERNAL_ID_FIELD/$externalId?updateOnly=true"
+                "${externalIdField["payment-status"]}/$externalId?updateOnly=true"
 
         val requestBody = gson.toJson(mapOf(fieldName to value))
         val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(requestBody)
+
+        return httpClient(request)
+    }
+
+    private fun updateResourceNumber(
+        externalId: String,
+        fieldName: String,
+        value: String?,
+    ): Response {
+        val personId = findPersonRecordId(externalId)
+        if (personId == null) throw IllegalArgumentException("Person not found for $externalId")
+
+        val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/Person__c/$personId"
+        val body = gson.toJson(mapOf(fieldName to value))
+
+        val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(body)
+        return httpClient(request)
+    }
+
+    private fun findPersonRecordId(externalId: String): String? {
+        val accountDetails: Response = getAccountDetails(externalId)
+
+        if (!accountDetails.status.successful) throw IllegalArgumentException("Failed to get account details")
+
+        return JsonParser
+            .parseString(accountDetails.bodyString())
+            .asJsonObject
+            .get("CRM_Person__c")
+            ?.takeUnless { it.isJsonNull }
+            ?.asString
+    }
+
+    private fun getAccountDetails(externalId: String): Response {
+        val dstUrl =
+            "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/Account/${externalIdField["resource-number"]}/$externalId"
+        val request = Request(Method.GET, dstUrl).headers(defaultHeaders())
 
         return httpClient(request)
     }

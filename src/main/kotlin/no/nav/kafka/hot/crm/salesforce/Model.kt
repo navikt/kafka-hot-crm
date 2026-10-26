@@ -72,6 +72,7 @@ fun Response.isSuccess(): Boolean =
                 log.error { "Post status parse error" }
                 false
             }
+        Status.NO_CONTENT -> true
         else -> {
             File("/tmp/sf-response-not-ok").writeText(this.toMessage())
             log.error { "Post request to Salesforce failed - ${status.description}(${status.code})" }
