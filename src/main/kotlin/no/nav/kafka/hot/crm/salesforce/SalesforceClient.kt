@@ -179,6 +179,47 @@ class SalesforceClient(
     }
 
     /**
+     * Returns only the authenticated Salesforce user and organization IDs.
+     */
+    fun identity(): Response {
+        val request =
+            Request(Method.GET, "${accessTokenHandler.instanceUrl}/services/oauth2/userinfo")
+                .headers(defaultHeaders())
+        val response = httpClient(request)
+        if (!response.status.successful) {
+            val statusCode = response.status.code
+            val reason = Status.fromCode(statusCode)?.description ?: "Unknown Status"
+            throw IllegalStateException(
+                "Failed to get Salesforce identity: HTTP $statusCode $reason; ${salesforceErrorCodes(response)}",
+            )
+        }
+
+        val identity =
+            runCatching {
+                val body = response.bodyString()
+                require(body.length <= 16_384)
+                val json = JsonParser.parseString(body).asJsonObject
+
+                fun requiredId(
+                    field: String,
+                    prefix: String,
+                ): String {
+                    val value = json.getAsJsonPrimitive(field)
+                    require(value != null && value.isString)
+                    return value.asString.also {
+                        require(it.startsWith(prefix) && it.matches(Regex("[A-Za-z0-9]{15}([A-Za-z0-9]{3})?")))
+                    }
+                }
+                mapOf(
+                    "userId" to requiredId("user_id", "005"),
+                    "organizationId" to requiredId("organization_id", "00D"),
+                )
+            }.getOrNull() ?: throw IllegalStateException("Invalid Salesforce identity response")
+
+        return Response(Status.OK).body(gson.toJson(identity))
+    }
+
+    /**
      * Returns the runtime Salesforce auth context used by this app.
      */
     fun context(): Response {

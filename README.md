@@ -18,6 +18,21 @@ Alternativt kan du bruke dispatch-jobben for kjøringer med flagg satt til TRUE,
 
 En beskrivelse av hva flaggene gjør finner du i [main.yaml](.github/workflows/main.yml).
 
+## Verify the authenticated Salesforce identity
+
+In Postman, send `POST /internal/tryOutSFRest` to the app with
+`Content-Type: application/json` and this raw JSON body:
+
+```json
+{"action":"identity"}
+```
+
+This is read-only. It calls Salesforce userinfo with the app's current token.
+The response contains only `userId` and `organizationId`.
+Compare `userId` with the expected integration user's Salesforce `User.Id`,
+and `organizationId` with the expected sandbox organization ID.
+This verifies the authenticated identity rather than inferring it from configuration.
+
 <details markdown="1">
 <summary><strong>Flyt</strong></summary>
 
