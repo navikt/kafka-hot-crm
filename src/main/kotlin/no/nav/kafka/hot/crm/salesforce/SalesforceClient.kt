@@ -92,13 +92,11 @@ class SalesforceClient(
         val personIdent = json["personIdent"].asString
         val resourceNumber = json["resourceNumber"].asString
 
-        log.info("Updating resource number for $personIdent with $resourceNumber")
-
         val personId = findPersonRecordId(personIdent)
         if (personId == null) throw IllegalArgumentException("Person not found for resource number update")
 
         val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/Person__c/$personId"
-        val body = gson.toJson(mapOf(fieldName to resourceNumber))
+        val body = gson.toJson(mapOf(fieldName to resourceNumber, "HOT_IsLos__c" to true))
 
         val request = Request(Method.PATCH, dstUrl).headers(defaultHeaders()).body(body)
         return httpClient(request)
