@@ -31,12 +31,23 @@ object Test {
 
             val response =
                 when (action) {
-                    "describe" ->
+                    "describe" -> {
                         sfClient.describeSObject(body.sObjectType ?: "HOT_Claim__c")
-                    "describeglobal", "describe_global", "describe-global" -> sfClient.describeGlobal()
-                    "context" -> sfClient.context()
-                    "identity" -> sfClient.identity()
-                    "update" ->
+                    }
+
+                    "describeglobal", "describe_global", "describe-global" -> {
+                        sfClient.describeGlobal()
+                    }
+
+                    "context" -> {
+                        sfClient.context()
+                    }
+
+                    "identity" -> {
+                        sfClient.identity()
+                    }
+
+                    "update" -> {
                         if (body.topic.isNullOrBlank() || body.externalId.isNullOrBlank()) {
                             Response(Status.BAD_REQUEST)
                                 .body("Missing required fields for update: topic, externalId")
@@ -47,9 +58,12 @@ object Test {
                                 value = body.value,
                             )
                         }
-                    else ->
+                    }
+
+                    else -> {
                         Response(Status.BAD_REQUEST)
                             .body("Unsupported action '$action'. Supported actions: update, describe, describeGlobal, context, identity")
+                    }
                 }
 
             Response(response.status).body(response.bodyString())

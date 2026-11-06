@@ -84,8 +84,14 @@ class KafkaPosterApplication(
 
             tailrec suspend fun loop(): Unit =
                 when {
-                    waitJob.isCompleted -> Unit
-                    ShutdownHook.isActive() -> waitJob.cancel()
+                    waitJob.isCompleted -> {
+                        Unit
+                    }
+
+                    ShutdownHook.isActive() -> {
+                        waitJob.cancel()
+                    }
+
                     else -> {
                         delay(250L)
                         loop()

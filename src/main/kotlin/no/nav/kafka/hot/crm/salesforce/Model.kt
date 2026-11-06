@@ -54,7 +54,7 @@ data class SFObjectError(
 
 fun Response.isSuccess(): Boolean =
     when (status) {
-        Status.OK ->
+        Status.OK -> {
             try {
                 val parsedResult: SFsObjectStatus = Gson().fromJson(bodyString(), SFsObjectStatus::class.java)
                 // Salesforce gives 200 OK independent of successful posting of records or not, need to check response value
@@ -72,7 +72,12 @@ fun Response.isSuccess(): Boolean =
                 log.error { "Post status parse error" }
                 false
             }
-        Status.NO_CONTENT -> true
+        }
+
+        Status.NO_CONTENT -> {
+            true
+        }
+
         else -> {
             File("/tmp/sf-response-not-ok").writeText(this.toMessage())
             log.error { "Post request to Salesforce failed - ${status.description}(${status.code})" }

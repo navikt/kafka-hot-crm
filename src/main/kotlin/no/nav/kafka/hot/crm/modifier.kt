@@ -128,22 +128,32 @@ private fun findNonWhitelistedFields(
 private fun JsonElement.removeFields(fieldTree: List<String>) {
     if (fieldTree.size == 1) {
         when (this) {
-            is JsonObject -> this.remove(fieldTree.first())
-            is JsonArray ->
+            is JsonObject -> {
+                this.remove(fieldTree.first())
+            }
+
+            is JsonArray -> {
                 this.forEach {
                     (it as JsonObject).remove(fieldTree.first())
                 }
+            }
+
             else -> {
                 throw IllegalStateException("JsonElement.removeFieldRecurse attempted removing a primitive or null")
             }
         }
     } else {
         when (this) {
-            is JsonObject -> this.get(fieldTree.first()).removeFields(fieldTree.subList(1, fieldTree.size))
-            is JsonArray ->
+            is JsonObject -> {
+                this.get(fieldTree.first()).removeFields(fieldTree.subList(1, fieldTree.size))
+            }
+
+            is JsonArray -> {
                 this.forEach {
                     (it as JsonObject).get(fieldTree.first()).removeFields(fieldTree.subList(1, fieldTree.size))
                 }
+            }
+
             else -> {
                 throw IllegalStateException("JsonElement.removeFieldRecurse attempted stepping into a primitive or null")
             }
