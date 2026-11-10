@@ -12,6 +12,7 @@ import no.nav.kafka.hot.crm.kafka.ConsumerFactory
 import no.nav.kafka.hot.crm.kafka.KafkaConsumerFactory
 import no.nav.kafka.hot.crm.metrics.WorkSessionStatistics
 import no.nav.kafka.hot.crm.resend.RerunUtility
+import no.nav.kafka.hot.crm.salesforce.AccountNotFoundException
 import no.nav.kafka.hot.crm.salesforce.KafkaMessage
 import no.nav.kafka.hot.crm.salesforce.SalesforceClient
 import no.nav.kafka.hot.crm.salesforce.isSuccess
@@ -136,13 +137,18 @@ class KafkaToSFPoster(
                     val externalId = record.key()
                     val value = if (modifier != null) modifier(record) else record.value()
 
-                    if (!sfClient
-                            .updateField(
-                                topic,
-                                externalId,
-                                value,
-                            ).isSuccess()
-                    ) {
+                    val result =
+                        try {
+                            sfClient.updateField(topic, externalId, value)
+                        } catch (_: AccountNotFoundException) {
+                            log.warn {
+                                "Skipping event: Account lookup returned 404; " +
+                                    "topic=$topic partition=${record.partition()} offset=${record.offset()}"
+                            }
+                            continue
+                        }
+
+                    if (!result.isSuccess()) {
                         log.warn { "Failed when posting to SF - $stats" }
                         WorkSessionStatistics.failedSalesforceCallCounter.inc()
                         return ConsumeResult.FAIL

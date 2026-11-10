@@ -93,7 +93,8 @@ class SalesforceClient(
         val resourceNumber = json["resourceNumber"].asString
 
         val personId = findPersonRecordId(personIdent)
-        if (personId == null) throw IllegalArgumentException("Person not found for resource number update")
+
+        if (personId == null) throw IllegalStateException("Person not found for resource number update")
 
         val dstUrl = "${accessTokenHandler.instanceUrl}/services/data/$SALESFORCE_VERSION/sobjects/Person__c/$personId"
         val body = gson.toJson(mapOf(fieldName to resourceNumber, "HOT_IsLos__c" to true))
@@ -104,6 +105,10 @@ class SalesforceClient(
 
     private fun findPersonRecordId(externalId: String): String? {
         val accountDetails: Response = getAccountDetails(externalId)
+
+        if (accountDetails.status.code == 404) {
+            throw AccountNotFoundException()
+        }
 
         if (!accountDetails.status.successful) {
             val statusCode = accountDetails.status.code
