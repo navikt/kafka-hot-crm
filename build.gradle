@@ -50,11 +50,11 @@ dependencies {
 
 
     implementation "org.xerial.snappy:snappy-java:1.1.10.12" // Transitive dependency for org.apache.kafka:kafka-clients:4.4.0
-    implementation "at.yawk.lz4:lz4-java:1.13.0" // Transitive dependency for org.apache.kafka:kafka-clients:4.3.0
+    implementation "at.yawk.lz4:lz4-java:1.14.0" // Transitive dependency for org.apache.kafka:kafka-clients:4.3.0
     implementation "io.github.microutils:kotlin-logging:3.0.5"
     implementation "ch.qos.logback:logback-classic:1.6.6"
     implementation "net.logstash.logback:logstash-logback-encoder:9.0"
-    implementation "tools.jackson.core:jackson-databind:3.2.4" // Transitive dependency on logback-encoder 9.0
+    implementation "tools.jackson.core:jackson-databind:3.3.0" // Transitive dependency on logback-encoder 9.0
 
     implementation "io.prometheus:simpleclient_common:0.9.0"
     implementation "io.prometheus:simpleclient_hotspot:0.9.0"
@@ -96,4 +96,11 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
 
 kotlin {
     jvmToolchain(21)
+}
+
+tasks.named('shadowJar') {
+    mergeServiceFiles()
+    filesMatching(['META-INF/services/**', 'META-INF/*.kotlin_module']) {
+        duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.INCLUDE
+    }
 }
